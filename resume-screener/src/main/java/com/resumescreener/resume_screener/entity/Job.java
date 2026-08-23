@@ -50,7 +50,7 @@ public class Job {
     }
 
     public String getRequiredSkills() {
-        return requiredSkills;
+        return this.requiredSkills;
     }
 
     public void setRequiredSkills(String requiredSkills) {
@@ -64,5 +64,4 @@ public class Job {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
 }

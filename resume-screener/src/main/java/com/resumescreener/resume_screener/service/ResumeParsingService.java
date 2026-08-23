@@ -49,11 +49,17 @@ public class ResumeParsingService {
 
         List<String> extractedSkills = new ArrayList<>();
 
-        String lowerCaseText = text.toLowerCase();
-
         for (String skill : knownSkills) {
 
-            if (lowerCaseText.contains(skill.toLowerCase())) {
+            String regex = "(?i)(?<![a-zA-Z0-9])"
+                    + java.util.regex.Pattern.quote(skill)
+                    + "(?![a-zA-Z0-9])";
+
+            if (java.util.regex.Pattern
+                    .compile(regex)
+                    .matcher(text)
+                    .find()) {
+
                 extractedSkills.add(skill);
             }
         }
