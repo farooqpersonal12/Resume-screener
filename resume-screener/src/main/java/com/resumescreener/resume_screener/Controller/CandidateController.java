@@ -3,6 +3,7 @@ package com.resumescreener.resume_screener.Controller;
 import com.resumescreener.resume_screener.DTOs.CandidateRequestDTO;
 import com.resumescreener.resume_screener.DTOs.CandidateResponseDTO;
 import com.resumescreener.resume_screener.service.CandidateService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class CandidateController {
 
     @PostMapping
     public ResponseEntity<CandidateResponseDTO> createCandidate(
-            @RequestBody CandidateRequestDTO candidateRequestDTO) {
+            @Valid @RequestBody CandidateRequestDTO candidateRequestDTO) {
 
         CandidateResponseDTO responseDTO = candidateService.createCandidate(candidateRequestDTO);
 

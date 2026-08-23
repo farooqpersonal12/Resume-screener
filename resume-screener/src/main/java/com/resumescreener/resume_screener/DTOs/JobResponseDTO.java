@@ -9,7 +9,6 @@ public class JobResponseDTO {
     private Long id;
     private String title;
     private String description;
-    private String requiredSkills;
     private LocalDateTime createdAt;
 
 

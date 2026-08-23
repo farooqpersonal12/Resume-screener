@@ -2,9 +2,11 @@ package com.resumescreener.resume_screener.Controller;
 
 import com.resumescreener.resume_screener.DTOs.JobRequestDTO;
 import com.resumescreener.resume_screener.DTOs.JobResponseDTO;
+import com.resumescreener.resume_screener.DTOs.JobUploadResponseDTO;
 import com.resumescreener.resume_screener.service.JobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -40,5 +42,15 @@ public class JobController {
         );
     }
 
+    @PostMapping("/upload")
+    public JobUploadResponseDTO uploadJobDescription(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title) {
+
+        return jobService.uploadJobDescription(
+                file,
+                title
+        );
+    }
 
 }

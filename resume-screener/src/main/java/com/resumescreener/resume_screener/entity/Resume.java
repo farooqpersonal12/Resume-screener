@@ -26,7 +26,7 @@ public class Resume {
     @Column(columnDefinition = "TEXT")
     private String education;
 
-    private LocalDateTime uploadAt;
+    private LocalDateTime uploadedAt;
 
     public Resume() {
     }
@@ -56,11 +56,11 @@ public class Resume {
     }
 
     public LocalDateTime getUploadedAt() {
-        return uploadAt;
+        return uploadedAt;
     }
 
-    public void setUploadAt(LocalDateTime uploadAt) {
-        this.uploadAt = uploadAt;
+    public void setUploadedAt(LocalDateTime uploadedAt) {
+        this.uploadedAt = uploadedAt;
     }
 
     public Candidate getCandidate() {

@@ -1,7 +1,9 @@
 package com.resumescreener.resume_screener.service;
 
+import com.resumescreener.resume_screener.DTOs.LLMMatchResponseDTO;
 import com.resumescreener.resume_screener.DTOs.MatchResultRequestDTO;
 import com.resumescreener.resume_screener.DTOs.MatchResultResponseDTO;
+import com.resumescreener.resume_screener.DTOs.ShortlistResponseDTO;
 import com.resumescreener.resume_screener.entity.Candidate;
 import com.resumescreener.resume_screener.entity.Job;
 import com.resumescreener.resume_screener.entity.MatchResult;
@@ -13,128 +15,117 @@ import com.resumescreener.resume_screener.repository.ResumeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class MatchResultService {
+
     private final MatchResultRepository matchResultRepository;
     private final CandidateRepository candidateRepository;
     private final JobRepository jobRepository;
     private final ResumeRepository resumeRepository;
+    private final LLMMatchingService llmMatchingService;
 
     public MatchResultService(
             MatchResultRepository matchResultRepository,
             CandidateRepository candidateRepository,
             JobRepository jobRepository,
-            ResumeRepository resumeRepository) {
+            ResumeRepository resumeRepository,
+            LLMMatchingService llmMatchingService) {
 
         this.matchResultRepository = matchResultRepository;
         this.candidateRepository = candidateRepository;
         this.jobRepository = jobRepository;
         this.resumeRepository = resumeRepository;
+        this.llmMatchingService = llmMatchingService;
     }
 
     public MatchResultResponseDTO createMatch(
             MatchResultRequestDTO requestDTO) {
 
         Candidate candidate = candidateRepository
-                .findById(requestDTO.getCandidateId())
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Candidate not found with id: "
-                                        + requestDTO.getCandidateId()));
+                        .findById(requestDTO.getCandidateId())
+                        .orElseThrow(
+                                () ->
+                                new RuntimeException(
+                                        "Candidate not found with id: " + requestDTO.getCandidateId()
+                                )
+                        );
 
         Job job = jobRepository
                 .findById(requestDTO.getJobId())
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Job not found with id: "
-                                        + requestDTO.getJobId()));
+                .orElseThrow(
+                        () -> new RuntimeException("Job not found with id: "+ requestDTO.getJobId())
+                        );
 
-        List<Resume> resumes =
-                resumeRepository.findAll()
-                        .stream()
-                        .filter(resume ->
-                                resume.getCandidate() != null
-                                        && resume.getCandidate()
-                                        .getId()
-                                        .equals(candidate.getId()))
-                        .toList();
+        Resume resume = resumeRepository
+                        .findTopByCandidateIdOrderByUploadedAtDesc(
+                                candidate.getId()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException("No resume found for candidate id: " + candidate.getId())
+                        );
 
-        if (resumes.isEmpty()) {
+        String resumeText = resume.getExtractedText();
+
+        if (resumeText == null || resumeText.isBlank()) {
             throw new RuntimeException(
-                    "No resume found for candidate id: "
-                            + candidate.getId());
+                    "Resume text is empty for resume id: "
+                            + resume.getId()
+            );
         }
 
-        Resume resume = resumes.get(resumes.size() - 1);
+        String jobDescription = job.getDescription();
 
-        String candidateSkills = resume.getSkills();
-        String requiredSkills = job.getRequiredSkills();
+        if (jobDescription == null || jobDescription.isBlank()) {
 
-        List<String> matchedSkills = new ArrayList<>();
-        List<String> missingSkills = new ArrayList<>();
-
-        if (requiredSkills != null && !requiredSkills.isBlank()) {
-
-            String[] jobSkills =
-                    requiredSkills.split(",");
-
-            for (String jobSkill : jobSkills) {
-
-                String requiredSkill =
-                        jobSkill.trim();
-
-                if (requiredSkill.isBlank()) {
-                    continue;
-                }
-
-                if (containsSkill(candidateSkills, requiredSkill)){
-
-                    matchedSkills.add(requiredSkill);
-
-                } else {
-
-                    missingSkills.add(requiredSkill);
-                }
-            }
+            throw new RuntimeException("Job description is empty for job id: " + job.getId());
         }
 
-        double score = 0.0;
-
-        if (!matchedSkills.isEmpty()
-                || !missingSkills.isEmpty()) {
-
-            score = ((double) matchedSkills.size()
-                    / (matchedSkills.size()
-                    + missingSkills.size())) * 10;
-        }
-
-        String justification =
-                "Candidate matched "
-                        + matchedSkills.size()
-                        + " out of "
-                        + (matchedSkills.size()
-                        + missingSkills.size())
-                        + " required skills.";
+        LLMMatchResponseDTO llmResult = llmMatchingService.matchResumeWithJob(
+                        resumeText,
+                        jobDescription
+                );
 
         MatchResult matchResult = new MatchResult();
 
         matchResult.setCandidate(candidate);
         matchResult.setJob(job);
-        matchResult.setScore(score);
+
+        matchResult.setScore(
+                llmResult.getScore()
+        );
+
+        matchResult.setJustification(
+                llmResult.getJustification()
+        );
+
         matchResult.setMatchedSkills(
-                String.join(", ", matchedSkills));
+                String.join(
+                        ", ",
+                        llmResult.getMatchedSkills()
+                )
+        );
+
         matchResult.setMissingSkills(
-                String.join(", ", missingSkills));
-        matchResult.setJustification(justification);
-        matchResult.setCreatedAt(LocalDateTime.now());
+                String.join(
+                        ", ",
+                        llmResult.getMissingSkills()
+                )
+        );
+
+        matchResult.setCreatedAt(
+                LocalDateTime.now()
+        );
 
         MatchResult savedResult =
-                matchResultRepository.save(matchResult);
+                matchResultRepository.save(
+                        matchResult
+                );
 
-        return convertToResponseDTO(savedResult);
+        return convertToResponseDTO(
+                savedResult
+        );
     }
 
     public List<MatchResultResponseDTO> getAllMatches() {
@@ -147,55 +138,108 @@ public class MatchResultService {
 
     public MatchResultResponseDTO getMatchById(Long id) {
 
-        MatchResult matchResult =
-                matchResultRepository.findById(id)
+        MatchResult matchResult = matchResultRepository.findById(id)
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Match result not found with id: "
-                                                + id));
+                                new RuntimeException("Match result not found with id: " + id)
+                        );
 
         return convertToResponseDTO(matchResult);
     }
 
-    private MatchResultResponseDTO convertToResponseDTO(
-            MatchResult matchResult) {
+    private MatchResultResponseDTO convertToResponseDTO(MatchResult matchResult) {
 
-        MatchResultResponseDTO dto =
-                new MatchResultResponseDTO();
+        MatchResultResponseDTO dto = new MatchResultResponseDTO();
 
         dto.setId(matchResult.getId());
+
         dto.setCandidateId(
-                matchResult.getCandidate().getId());
+                matchResult.getCandidate().getId()
+        );
+
         dto.setJobId(
-                matchResult.getJob().getId());
-        dto.setScore(matchResult.getScore());
+                matchResult.getJob().getId()
+        );
+
+        dto.setScore(
+                matchResult.getScore()
+        );
+
         dto.setJustification(
-                matchResult.getJustification());
+                matchResult.getJustification()
+        );
+
         dto.setMatchedSkills(
-                matchResult.getMatchedSkills());
+                matchResult.getMatchedSkills()
+        );
+
         dto.setMissingSkills(
-                matchResult.getMissingSkills());
+                matchResult.getMissingSkills()
+        );
+
         dto.setCreatedAt(
-                matchResult.getCreatedAt());
+                matchResult.getCreatedAt()
+        );
 
         return dto;
     }
 
-    private boolean containsSkill(String candidateSkills, String requiredSkill) {
+    public List<ShortlistResponseDTO> getShortlistedCandidates(
+            Long jobId,
+            Double minScore) {
 
-        if (candidateSkills == null || candidateSkills.isBlank()) {
-            return false;
-        }
+        jobRepository.findById(jobId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Job not found with id: " + jobId
+                        )
+                );
 
-        String regex = "(?i)(?<![a-zA-Z0-9])"
-                + java.util.regex.Pattern.quote(requiredSkill)
-                + "(?![a-zA-Z0-9])";
+        List<MatchResult> results =
+                matchResultRepository
+                        .findByJobIdAndScoreGreaterThanEqualOrderByScoreDesc(
+                                jobId,
+                                minScore
+                        );
 
-        return java.util.regex.Pattern
-                .compile(regex)
-                .matcher(candidateSkills)
-                .find();
+        return results.stream()
+                .map(this::convertToShortlistDTO)
+                .toList();
     }
 
+    private ShortlistResponseDTO convertToShortlistDTO(
+            MatchResult matchResult) {
 
+        ShortlistResponseDTO dto =
+                new ShortlistResponseDTO();
+
+        dto.setCandidateId(
+                matchResult.getCandidate().getId()
+        );
+
+        dto.setCandidateName(
+                matchResult.getCandidate().getName()
+        );
+
+        dto.setJobId(
+                matchResult.getJob().getId()
+        );
+
+        dto.setScore(
+                matchResult.getScore()
+        );
+
+        dto.setMatchedSkills(
+                matchResult.getMatchedSkills()
+        );
+
+        dto.setMissingSkills(
+                matchResult.getMissingSkills()
+        );
+
+        dto.setJustification(
+                matchResult.getJustification()
+        );
+
+        return dto;
+    }
 }

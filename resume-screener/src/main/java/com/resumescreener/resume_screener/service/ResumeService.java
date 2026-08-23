@@ -75,7 +75,7 @@ public class ResumeService {
         resume.setExperience(experience);
         resume.setEducation(education);
         resume.setCandidate(candidate);
-        resume.setUploadAt(LocalDateTime.now());
+        resume.setUploadedAt(LocalDateTime.now());
 
         Resume savedResume = resumeRepository.save(resume);
 

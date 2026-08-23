@@ -1,25 +1,12 @@
-package com.resumescreener.resume_screener.entity;
+package com.resumescreener.resume_screener.DTOs;
 
-import jakarta.persistence.*;
+public class JobUploadResponseDTO {
 
-import java.time.LocalDateTime;
-
-@Entity
-@Table(name = "job")
-public class Job {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String title;
-
-    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
-    private LocalDateTime createdAt;
-
-    public Job() {
+    public JobUploadResponseDTO() {
     }
 
     public Long getId() {
@@ -44,13 +31,5 @@ public class Job {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

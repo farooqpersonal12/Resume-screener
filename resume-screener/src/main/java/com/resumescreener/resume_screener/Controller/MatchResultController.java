@@ -2,6 +2,7 @@ package com.resumescreener.resume_screener.Controller;
 
 import com.resumescreener.resume_screener.DTOs.MatchResultRequestDTO;
 import com.resumescreener.resume_screener.DTOs.MatchResultResponseDTO;
+import com.resumescreener.resume_screener.DTOs.ShortlistResponseDTO;
 import com.resumescreener.resume_screener.service.MatchResultService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,17 @@ public class MatchResultController {
 
         return ResponseEntity.ok(
                 matchResultService.getMatchById(id)
+        );
+    }
+
+    @GetMapping("/jobs/{jobId}/shortlist")
+    public List<ShortlistResponseDTO> getShortlistedCandidates(
+            @PathVariable Long jobId,
+            @RequestParam(defaultValue = "7.0") Double minScore) {
+
+        return matchResultService.getShortlistedCandidates(
+                jobId,
+                minScore
         );
     }
 
