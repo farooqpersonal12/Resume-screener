@@ -15,11 +15,12 @@ An AI-powered candidate-job matching backend built with Spring Boot and the Gemi
 9. [Gemini LLM Integration](#9-gemini-llm-integration)
 10. [REST API](#10-rest-api)
 11. [Setup and Installation](#11-setup-and-installation)
-12. [Sample Matching Result](#12-sample-matching-result)
-13. [Future Enhancements](#13-future-enhancements)
-14. [Project Deliverables](#14-project-deliverables)
-15. [Demo Video](#15-demo-video)
-16. [Author](#16-author)
+12. [Deployment](#12-deployment)
+13. [Sample Matching Result](#13-sample-matching-result)
+14. [Future Enhancements](#14-future-enhancements)
+15. [Project Deliverables](#15-project-deliverables)
+16. [Demo Video](#16-demo-video)
+17. [Author](#17-author)
 
 ---
 
@@ -470,7 +471,68 @@ Do not commit the API key to GitHub.
 
 ---
 
-## 12. Sample Matching Result
+## 12. Deployment
+
+The backend is deployed on Render using Docker, with Aiven MySQL as the production database and the Gemini API for AI-powered resume-job matching.
+
+### Live API
+
+Render Deployment: [https://resume-screener-gbtd.onrender.com](https://resume-screener-gbtd.onrender.com)
+
+### Deployment Architecture
+
+```text
+GitHub Repository
+       │
+       ▼
+     Render
+   Docker + Spring Boot
+       │
+       ├──────────────────┐
+       │                  │
+       ▼                  ▼
+ Aiven MySQL          Gemini API
+       │
+       ▼
+Candidate / Resume / Job / Match Data
+```
+
+### Technologies Used
+
+- **Render** — Spring Boot backend deployment
+- **Docker** — Containerization
+- **Aiven MySQL** — Production database
+- **Gemini API** — AI-powered resume and job matching
+- **GitHub** — Source code and version control
+
+### Production Configuration
+
+Sensitive configuration values are stored as environment variables and never committed to the repository:
+
+```text
+GEMINI_API_KEY
+DB_URL
+DB_USERNAME
+DB_PASSWORD
+```
+
+Environment-based configuration means the same codebase runs in both local development and production.
+
+### Verified Production Features
+
+- Candidate creation and retrieval
+- Resume PDF upload and skill extraction
+- Job description upload
+- AI-powered resume-job matching
+- Match score generation
+- Matched and missing skill identification
+- Match-result persistence
+- Candidate shortlisting
+- Production MySQL read/write operations
+
+---
+
+## 13. Sample Matching Result
 
 ```json
 {
@@ -490,7 +552,7 @@ The result gives both a numerical score and an explanation, so the screening dec
 
 ---
 
-## 13. Future Enhancements
+## 14. Future Enhancements
 
 - React-based recruiter dashboard.
 - Advanced PDF resume parsing.
@@ -506,7 +568,7 @@ The result gives both a numerical score and an explanation, so the screening dec
 
 ---
 
-## 14. Project Deliverables
+## 15. Project Deliverables
 
 - GitHub repository with project source code.
 - Technical README documentation.
@@ -518,7 +580,7 @@ Evaluation focuses on code quality, data extraction, LLM prompt quality, and out
 
 ---
 
-## 15. Demo Video
+## 16. Demo Video
 
 ▶️ **[Watch the Smart Resume Screener Demo](YOUR_YOUTUBE_LINK)**
 
@@ -536,7 +598,7 @@ The demo covers:
 
 ---
 
-## 16. Author
+## 17. Author
 
 **UMAR FAROOQ**
 
