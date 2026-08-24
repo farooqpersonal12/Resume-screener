@@ -1,8 +1,3 @@
-FROM ubuntu:latest
-LABEL authors="uf913"
-
-ENTRYPOINT ["top", "-b"]
-
 # Build stage
 FROM maven:3.9-eclipse-temurin-24 AS build
 
