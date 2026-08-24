@@ -477,7 +477,7 @@ The backend is deployed on Render using Docker, with Aiven MySQL as the producti
 
 ### Live API
 
-Render Deployment: [https://resume-screener-gbtd.onrender.com](https://resume-screener-gbtd.onrender.com)
+Render Deployment: [https://resume-screener-gbtd.onrender.com](https://resume-screener-gbtd.onrender.com/api/candidates)
 
 ### Deployment Architecture
 
